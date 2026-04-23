@@ -18,6 +18,7 @@
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
 #include <tchar.h>
+#include <shellapi.h>
 
 //
 // The plugin data that Notepad++ needs
@@ -61,7 +62,8 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Open TC Latest Syslog"), openLatestSyslog, &syslogShortcut, false);
+    setCommand(0, TEXT("Open GitHub Repository"), openGitHubRepo, NULL, false);
+    setCommand(1, TEXT("Open TC Latest Syslog"), openLatestSyslog, &syslogShortcut, false);
 }
 
 //
@@ -95,6 +97,11 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
+void openGitHubRepo()
+{
+    ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/bsagarzazu/npp-tc-syslog-finder"), NULL, NULL, SW_SHOWNORMAL);
+}
+
 void openLatestSyslog()
 {
     // Read TC_TEMP_DIR environment variable
