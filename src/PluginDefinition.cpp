@@ -17,6 +17,7 @@
 
 #include "PluginDefinition.h"
 #include "menuCmdID.h"
+#include <tchar.h>
 
 //
 // The plugin data that Notepad++ needs
@@ -58,8 +59,7 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Hello Notepad++"), hello, NULL, false);
-    setCommand(1, TEXT("Hello (with dialog)"), helloDlg, NULL, false);
+    setCommand(0, TEXT("Open TC Latest Syslog"), openLatestSyslog, NULL, false);
 }
 
 //
@@ -93,24 +93,41 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
-void hello()
+void openLatestSyslog()
 {
-    // Open a new document
-    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_FILE_NEW);
-
-    // Get the current scintilla
-    int which = -1;
-    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
-    if (which == -1)
+    // Read TC_TEMP_DIR environment variable
+    TCHAR szDir[MAX_PATH];
+    DWORD len = GetEnvironmentVariable(TEXT("TC_TEMP_DIR"), szDir, MAX_PATH);
+    if (len == 0)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Environment variable 'TC_TEMP_DIR' is not set"), TEXT("Error"), MB_OK | MB_ICONERROR);
         return;
-    HWND curScintilla = (which == 0)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
+    }
 
-    // Say hello now :
-    // Scintilla control has no Unicode mode, so we use (char *) here
-    ::SendMessage(curScintilla, SCI_SETTEXT, 0, (LPARAM)"Hello, Notepad++!");
-}
+    // Search for the latest syslog file in TC_TEMP_DIR
+    TCHAR szSearchPath[MAX_PATH];
+    _stprintf_s(szSearchPath, MAX_PATH, TEXT("%s\\tcserver*.syslog"), szDir);
+    
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind = FindFirstFile(szSearchPath, &findFileData);
+    
+    if (hFind == INVALID_HANDLE_VALUE) {
+        MessageBox(nppData._nppHandle, TEXT("No syslog files found in TC_TEMP_DIR."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONERROR);
+        return;
+    }
+    
+    FILETIME latestTime = findFileData.ftLastWriteTime;
+    TCHAR szLatestFile[MAX_PATH];
+    _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szDir, findFileData.cFileName);
 
-void helloDlg()
-{
-    ::MessageBox(NULL, TEXT("Hello, Notepad++!"), TEXT("Notepad++ Plugin Template"), MB_OK);
+    while (FindNextFile(hFind, &findFileData)) {
+        if (CompareFileTime(&findFileData.ftLastWriteTime, &latestTime) > 0) {
+            latestTime = findFileData.ftLastWriteTime;
+            _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szDir, findFileData.cFileName);
+        }
+    }
+    FindClose(hFind);  
+    
+    // Open the latest syslog file in Notepad++
+    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)szLatestFile);
 }
