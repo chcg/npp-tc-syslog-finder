@@ -29,6 +29,8 @@ FuncItem funcItem[nbFunc];
 //
 NppData nppData;
 
+ShortcutKey syslogShortcut = { false, true, true, 'L' };
+
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -59,7 +61,7 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Open TC Latest Syslog"), openLatestSyslog, NULL, false);
+    setCommand(0, TEXT("Open TC Latest Syslog"), openLatestSyslog, &syslogShortcut, false);
 }
 
 //
