@@ -160,6 +160,9 @@ void openLatestSyslog()
     
     // Open the latest syslog file in Notepad++
     ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)szLatestFile);
+
+    // Track the new content
+    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_VIEW_MONITORING);
 }
 
 void setSyslogPath()
