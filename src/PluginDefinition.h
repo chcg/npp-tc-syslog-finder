@@ -38,6 +38,9 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("TC Syslog Finder");
 //
 const int nbFunc = 4;
 
+void saveSyslogPath(const TCHAR* path);
+void loadSyslogPath(TCHAR* outPath, DWORD size);
+void infoInit();
 
 //
 // Initialization of your plugin data

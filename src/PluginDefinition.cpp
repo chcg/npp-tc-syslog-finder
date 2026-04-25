@@ -38,12 +38,25 @@ TCHAR szIniFileName[] = TEXT("TCSyslogFinder.ini");
 TCHAR szIniSection[] = TEXT("Settings");
 TCHAR szIniKey[] = TEXT("SyslogPath");
 
-void saveSyslogPath(const TCHAR* path) {
+void saveSyslogPath(const TCHAR* path) 
+{
     WritePrivateProfileString(szIniSection, szIniKey, path, szIniFilePath);
 }
 
-void loadSyslogPath(TCHAR* outPath, DWORD size) {
+void loadSyslogPath(TCHAR* outPath, DWORD size) 
+{
     GetPrivateProfileString(szIniSection, szIniKey, TEXT(""), outPath, size, szIniFilePath);
+}
+
+void infoInit() 
+{
+    ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM)szIniFilePath);
+    CreateDirectory(szIniFilePath, NULL);
+
+    _tcscat_s(szIniFilePath, MAX_PATH, TEXT("\\"));
+    _tcscat_s(szIniFilePath, MAX_PATH, szIniFileName);
+        
+    loadSyslogPath(szSyslogPath, MAX_PATH);
 }
 
 //
@@ -51,13 +64,6 @@ void loadSyslogPath(TCHAR* outPath, DWORD size) {
 // It will be called while plugin loading   
 void pluginInit(HANDLE /*hModule*/)
 {
-    ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM)szIniFilePath);
-    CreateDirectory(szIniFilePath, NULL);
-    
-    _tcscat_s(szIniFilePath, MAX_PATH, TEXT("\\"));
-    _tcscat_s(szIniFilePath, MAX_PATH, szIniFileName);
-
-    loadSyslogPath(szSyslogPath, MAX_PATH);
 }
 
 //
