@@ -33,30 +33,33 @@ NppData nppData;
 
 ShortcutKey syslogShortcut = { false, true, true, 'L' };
 TCHAR szSyslogPath[MAX_PATH] = {0};
+TCHAR szSearchPattern[MAX_PATH] = {0};
 TCHAR szIniFilePath[MAX_PATH] = {0};
-TCHAR szIniFileName[] = TEXT("TCSyslogFinder.ini");
+
 TCHAR szIniSection[] = TEXT("Settings");
-TCHAR szIniKey[] = TEXT("SyslogPath");
+TCHAR szKeyPath[] = TEXT("SyslogPath");
+TCHAR szKeyPattern[] = TEXT("SearchPattern");
 
-void saveSyslogPath(const TCHAR* path) 
+void loadConfig() 
 {
-    WritePrivateProfileString(szIniSection, szIniKey, path, szIniFilePath);
+    if (szIniFilePath[0] == 0) {
+        ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM)szIniFilePath);
+        CreateDirectory(szIniFilePath, NULL);
+        _tcscat_s(szIniFilePath, MAX_PATH, TEXT("\\TCSyslogFinder.ini"));
+    }
+    
+    GetPrivateProfileString(szIniSection, szKeyPath, TEXT(""), szSyslogPath, MAX_PATH, szIniFilePath);
+    GetPrivateProfileString(szIniSection, szKeyPattern, TEXT("tcserver*.syslog"), szSearchPattern, MAX_PATH, szIniFilePath);
+    
+    if (GetFileAttributes(szIniFilePath) == INVALID_FILE_ATTRIBUTES) {
+        saveConfigValue(szKeyPath, szSyslogPath);
+        saveConfigValue(szKeyPattern, szSearchPattern);
+    }
 }
 
-void loadSyslogPath(TCHAR* outPath, DWORD size) 
+void saveConfigValue(const TCHAR* szKey, const TCHAR* szValue) 
 {
-    GetPrivateProfileString(szIniSection, szIniKey, TEXT(""), outPath, size, szIniFilePath);
-}
-
-void infoInit() 
-{
-    ::SendMessage(nppData._nppHandle, NPPM_GETPLUGINSCONFIGDIR, MAX_PATH, (LPARAM)szIniFilePath);
-    CreateDirectory(szIniFilePath, NULL);
-
-    _tcscat_s(szIniFilePath, MAX_PATH, TEXT("\\"));
-    _tcscat_s(szIniFilePath, MAX_PATH, szIniFileName);
-        
-    loadSyslogPath(szSyslogPath, MAX_PATH);
+    WritePrivateProfileString(szIniSection, szKey, szValue, szIniFilePath);
 }
 
 //
@@ -89,10 +92,11 @@ void commandMenuInit()
     //            ShortcutKey *shortcut,          // optional. Define a shortcut to trigger this command
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
-    setCommand(0, TEXT("Open GitHub Repository"), openGitHubRepo, NULL, false);
-    setCommand(1, TEXT("---"), NULL, NULL, false);
-    setCommand(2, TEXT("Open TC Latest Syslog"), openLatestSyslog, &syslogShortcut, false);
-    setCommand(3, TEXT("Set TC Syslog Path"), setSyslogPath, NULL, false);
+    setCommand(0, TEXT("Open Latest TC Syslog"), openLatestSyslog, &syslogShortcut, false);
+    setCommand(1, TEXT("Set TC Syslog Path"), setSyslogPath, NULL, false);
+    setCommand(2, TEXT("Edit Settings"), openSettings, NULL, false);
+    setCommand(3, TEXT("---"), NULL, NULL, false);
+    setCommand(4, TEXT("GitHub Repository"), openGitHubRepo, NULL, false);
 }
 
 //
@@ -126,40 +130,38 @@ bool setCommand(size_t index, TCHAR *cmdName, PFUNCPLUGINCMD pFunc, ShortcutKey 
 //----------------------------------------------//
 //-- STEP 4. DEFINE YOUR ASSOCIATED FUNCTIONS --//
 //----------------------------------------------//
-void openGitHubRepo()
-{
-    ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/bsagarzazu/npp-tc-syslog-finder"), NULL, NULL, SW_SHOWNORMAL);
-}
-
 void openLatestSyslog()
 {
+    // Load the latest configuration
+    loadConfig();
+
     // Read TC Syslog Path from settings
     if (szSyslogPath[0] == 0)
     {
-        ::MessageBox(nppData._nppHandle, TEXT("TC Syslog Path is not set. Use 'Set TC Syslog Path' first."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
+        ::MessageBox(nppData._nppHandle, TEXT("Path not set. Use 'Set TC Syslog Path'."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
         return;
     }
 
     // Search for the latest syslog file in TC Syslog Path
-    TCHAR szSearchPath[MAX_PATH];
-    _stprintf_s(szSearchPath, MAX_PATH, TEXT("%s\\tcserver*.syslog"), szSyslogPath);
+    TCHAR szSearch[MAX_PATH];
+    _stprintf_s(szSearch, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, szSearchPattern);
     
-    WIN32_FIND_DATA findFileData;
-    HANDLE hFind = FindFirstFile(szSearchPath, &findFileData);
+    WIN32_FIND_DATA fd;
+    HANDLE hFind = FindFirstFile(szSearch, &fd);
     
     if (hFind == INVALID_HANDLE_VALUE) {
-        MessageBox(nppData._nppHandle, TEXT("No syslog files found in TC Syslog Path."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
+        MessageBox(nppData._nppHandle, TEXT("No syslog files found."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
         return;
     }
     
-    FILETIME latestTime = findFileData.ftLastWriteTime;
+    FILETIME ftLatest = fd.ftLastWriteTime;
     TCHAR szLatestFile[MAX_PATH];
-    _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, findFileData.cFileName);
+    _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, fd.cFileName);
 
-    while (FindNextFile(hFind, &findFileData)) {
-        if (CompareFileTime(&findFileData.ftLastWriteTime, &latestTime) > 0) {
-            latestTime = findFileData.ftLastWriteTime;
-            _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, findFileData.cFileName);
+    while (FindNextFile(hFind, &fd)) {
+        if (CompareFileTime(&fd.ftLastWriteTime, &ftLatest) > 0) {
+            ftLatest = fd.ftLastWriteTime;
+            _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, fd.cFileName);
         }
     }
     FindClose(hFind);  
@@ -195,7 +197,7 @@ void setSyslogPath()
                     if (SUCCEEDED(pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath)))
                     {
                         _tcscpy_s(szSyslogPath, MAX_PATH, pszFilePath);
-                        saveSyslogPath(szSyslogPath);
+                        saveConfigValue(TEXT("SyslogPath"), szSyslogPath);
                         CoTaskMemFree(pszFilePath);
                     }
                     pItem->Release();
@@ -205,4 +207,24 @@ void setSyslogPath()
         }
         CoUninitialize();
     }
+}
+
+void openSettings()
+{
+    // Load the latest configuration
+    loadConfig();
+    
+    // Open the configuration file in Notepad++ to allow user to edit settings
+    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)szIniFilePath);
+    ::MessageBox(nppData._nppHandle, 
+        TEXT("Configuration file opened.\n\n"
+             "Update the settings and save the file (Ctrl+S).\n"
+             "Changes will apply immediately on your next search."), 
+        TEXT("TC Syslog Finder"), MB_OK | MB_ICONINFORMATION);
+}
+
+void openGitHubRepo()
+{
+    // Open the GitHub repository in the default web browser
+    ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/bsagarzazu/npp-tc-syslog-finder"), NULL, NULL, SW_SHOWNORMAL);
 }
