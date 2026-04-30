@@ -32,6 +32,9 @@ FuncItem funcItem[nbFunc];
 NppData nppData;
 
 ShortcutKey syslogShortcut = { false, true, true, 'L' };
+ShortcutKey folderShortcut = { false, true, true, 'F' };
+ShortcutKey cleanShortcut = { false, true, true, 'C' };
+
 TCHAR szSyslogPath[MAX_PATH] = {0};
 TCHAR szSearchPattern[MAX_PATH] = {0};
 TCHAR szIniFilePath[MAX_PATH] = {0};
@@ -93,10 +96,13 @@ void commandMenuInit()
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
     setCommand(0, TEXT("Open Latest TC Syslog"), openLatestSyslog, &syslogShortcut, false);
-    setCommand(1, TEXT("Set TC Syslog Path"), setSyslogPath, NULL, false);
-    setCommand(2, TEXT("Edit Settings"), openSettings, NULL, false);
+    setCommand(1, TEXT("Open Syslog Folder"), openSyslogFolder, &folderShortcut, false);
+    setCommand(2, TEXT("Clean Old Syslogs"), cleanOldSyslogs, &cleanShortcut, false);
     setCommand(3, TEXT("---"), NULL, NULL, false);
-    setCommand(4, TEXT("GitHub Repository"), openGitHubRepo, NULL, false);
+    setCommand(4, TEXT("Set TC Syslog Path"), setSyslogPath, NULL, false);
+    setCommand(5, TEXT("Edit Settings"), openSettings, NULL, false);
+    setCommand(6, TEXT("---"), NULL, NULL, false);
+    setCommand(7, TEXT("GitHub Repository"), openGitHubRepo, NULL, false);
 }
 
 //
@@ -171,6 +177,62 @@ void openLatestSyslog()
 
     // Track the new content
     ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_VIEW_MONITORING);
+}
+
+void openSyslogFolder()
+{
+    loadConfig();
+    if (szSyslogPath[0] == 0)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Path not set. Use 'Set TC Syslog Path'."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
+        return;
+    }
+    else
+    {
+        ShellExecute(NULL, TEXT("explore"), szSyslogPath, NULL, NULL, SW_SHOWNORMAL);
+    }
+}
+
+void cleanOldSyslogs()
+{
+    if (szSyslogPath[0] == 0) return;
+
+    if (::MessageBox(nppData._nppHandle,
+        TEXT("Delete all syslogs older than 7 days?"),
+        TEXT("Clean Logs"), MB_YESNO | MB_ICONQUESTION) == IDYES)
+    {
+        TCHAR szSearch[MAX_PATH];
+        _stprintf_s(szSearch, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, szSearchPattern);
+
+        WIN32_FIND_DATA fd;
+        HANDLE hFind = FindFirstFile(szSearch, &fd);
+
+        if (hFind != INVALID_HANDLE_VALUE) {
+            FILETIME ftNow;
+            GetSystemTimeAsFileTime(&ftNow);
+
+            ULONGLONG sevenDays = 7ULL * 24 * 60 * 60 * 1000 * 1000 * 10;
+
+            do {
+                ULARGE_INTEGER uiLastWrite;
+                uiLastWrite.LowPart = fd.ftLastWriteTime.dwLowDateTime;
+                uiLastWrite.HighPart = fd.ftLastWriteTime.dwHighDateTime;
+
+                ULARGE_INTEGER uiNow;
+                uiNow.LowPart = ftNow.dwLowDateTime;
+                uiNow.HighPart = ftNow.dwHighDateTime;
+
+                if (uiNow.QuadPart - uiLastWrite.QuadPart > sevenDays) {
+                    TCHAR szFileToDelete[MAX_PATH];
+                    _stprintf_s(szFileToDelete, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, fd.cFileName);
+                    DeleteFile(szFileToDelete);
+                }
+            } while (FindNextFile(hFind, &fd));
+            FindClose(hFind);
+
+            MessageBox(nppData._nppHandle, TEXT("Old logs cleaned."), TEXT("Success"), MB_OK);
+        }
+    }
 }
 
 void setSyslogPath()
