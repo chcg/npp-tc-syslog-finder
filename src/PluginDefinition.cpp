@@ -66,6 +66,31 @@ void saveConfigValue(const TCHAR* szKey, const TCHAR* szValue)
     WritePrivateProfileString(szIniSection, szKey, szValue, szIniFilePath);
 }
 
+void CALLBACK timerToScroll(HWND /*hWnd*/, UINT /*uMsg*/, UINT_PTR idEvent, DWORD /*dwTime*/)
+{
+    ::KillTimer(NULL, idEvent);
+
+    int which = -1;
+    ::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&which);
+    if (which == -1) return;
+
+    HWND hCurScintilla = (which == 0) ? nppData._scintillaMainHandle : nppData._scintillaSecondHandle;
+
+    // Track the new content
+    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_VIEW_MONITORING);
+
+    // Go to the end of the file
+    int nLines = (int)::SendMessage(hCurScintilla, SCI_GETLINECOUNT, 0, 0);
+    int nLastLine = nLines - 1;
+
+    if (nLastLine >= 0)
+    {
+        ::SendMessage(hCurScintilla, SCI_ENSUREVISIBLE, nLastLine, 0);
+        ::SendMessage(hCurScintilla, SCI_GOTOLINE, nLastLine, 0);
+        ::SendMessage(hCurScintilla, SCI_SCROLLCARET, 0, 0);
+    }
+}
+
 //
 // Initialize your plugin data here
 // It will be called while plugin loading   
@@ -174,10 +199,10 @@ void openLatestSyslog()
     FindClose(hFind);  
     
     // Open the latest syslog file in Notepad++
-    ::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)szLatestFile);
-
-    // Track the new content
-    ::SendMessage(nppData._nppHandle, NPPM_MENUCOMMAND, 0, IDM_VIEW_MONITORING);
+    if (::SendMessage(nppData._nppHandle, NPPM_DOOPEN, 0, (LPARAM)szLatestFile)) 
+    {
+        ::SetTimer(NULL, 0, 0, (TIMERPROC)timerToScroll);
+    }
 }
 
 void openSyslogFolder()
