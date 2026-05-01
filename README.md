@@ -3,7 +3,7 @@
 A Notepad++ plugin to open the latest Teamcenter syslog instantly. 
 
 ### Why?
-Every time you start a new Teamcenter session —which happens a lot during debugging— you need to find and open a different syslog file. Whether you check it in Teamcenter's *Help > About > Syslog* or keep the syslog folder open, it feels like a tedious waste of time. I wanted to make my daily work more efficient.
+Every time you start a new Teamcenter session —which happens a lot during debugging— you need to find and open a different syslog file. Whether you check it in Teamcenter's *Help > About > Log File* or keep the syslog folder open, it feels like a tedious waste of time. I wanted to make my daily work more efficient.
 
 This plugin replaces that whole process with a single shortcut.
 
