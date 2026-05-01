@@ -207,7 +207,9 @@ void openLatestSyslog()
 
 void openSyslogFolder()
 {
+    // Load the latest configuration
     loadConfig();
+
     if (szSyslogPath[0] == 0)
     {
         ::MessageBox(nppData._nppHandle, TEXT("Path not set. Use 'Set TC Syslog Path'."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
@@ -221,6 +223,9 @@ void openSyslogFolder()
 
 void cleanOldSyslogs()
 {
+    // Load the latest configuration
+    loadConfig();
+
     if (szSyslogPath[0] == 0) return;
 
     if (::MessageBox(nppData._nppHandle,
@@ -263,6 +268,9 @@ void cleanOldSyslogs()
 
 void setSyslogPath()
 {
+    // Load the latest configuration
+    loadConfig();
+
     // Open a folder selection dialog to set TC Syslog Path
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     if (SUCCEEDED(hr))
