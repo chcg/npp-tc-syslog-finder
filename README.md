@@ -13,7 +13,7 @@ This plugin replaces that whole process with a single shortcut.
 * `Alt + Shift + C`: Delete syslogs older than 7 days.
 
 ### Installation
-1. Download `TCSyslogFinder.dll` from [Releases](../../releases).
+1. Download `TCSyslogFinder.dll` from [Releases](https://github.com/bsagarzazu/npp-tc-syslog-finder/releases/).
 2. Create the folder: `C:\Program Files\Notepad++\plugins\TCSyslogFinder\`
 3. Drop the DLL inside and restart Notepad++.
 
