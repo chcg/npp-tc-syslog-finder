@@ -129,6 +129,7 @@ void commandMenuInit()
     setCommand(5, TEXT("Edit Settings"), openSettings, NULL, false);
     setCommand(6, TEXT("---"), NULL, NULL, false);
     setCommand(7, TEXT("GitHub Repository"), openGitHubRepo, NULL, false);
+    setCommand(8, TEXT("About"), showAbout, NULL, false);
 }
 
 //
@@ -323,4 +324,17 @@ void openGitHubRepo()
 {
     // Open the GitHub repository in the default web browser
     ShellExecute(NULL, TEXT("open"), TEXT("https://github.com/bsagarzazu/npp-tc-syslog-finder"), NULL, NULL, SW_SHOWNORMAL);
+}
+
+void showAbout()
+{
+    TCHAR szAbout[1024];
+    _stprintf_s(szAbout, 1024,
+        TEXT("TC Syslog Finder v1.0.0\n\n")
+        TEXT("Instantly find and open the latest Teamcenter syslog in Notepad++.\n\n")
+        TEXT("Author: bsagarzazu\n")
+        TEXT("License: GPL-2.0")
+    );
+
+    ::MessageBox(nppData._nppHandle, szAbout, TEXT("About TC Syslog Finder"), MB_OK | MB_ICONINFORMATION);
 }

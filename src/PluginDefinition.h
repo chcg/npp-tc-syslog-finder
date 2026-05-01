@@ -37,7 +37,7 @@ const TCHAR NPP_PLUGIN_NAME[] = TEXT("TC Syslog Finder");
 //
 // Here define the number of your plugin commands
 //
-const int nbFunc = 8;
+const int nbFunc = 9;
 
 void loadConfig();
 void saveConfigValue(const TCHAR* szKey, const TCHAR* szValue);
@@ -79,4 +79,5 @@ void cleanOldSyslogs();
 void setSyslogPath();
 void openSettings();
 void openGitHubRepo();
+void showAbout();
 #endif //PLUGINDEFINITION_H
