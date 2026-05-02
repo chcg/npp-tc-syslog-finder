@@ -41,7 +41,7 @@ BEGIN
 		BLOCK "040904b0"
 		BEGIN
 			VALUE	"CompanyName",	"bsagarzazu\0"
-			VALUE	"FileDescription",	"Teamcenter Syslog Finder for Notepad++\0"
+			VALUE	"FileDescription",	"Instantly find and open the latest Teamcenter syslog in Notepad++.\0"
 			VALUE	"FileVersion",	VERSION_VALUE
 			VALUE	"InternalName",	"TCSyslogFinder.dll\0"
 			VALUE	"LegalCopyright",	"Copyright 2026 bsagarzazu / Based on Don HO template\0"

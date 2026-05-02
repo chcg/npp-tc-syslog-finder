@@ -129,7 +129,7 @@ void commandMenuInit()
     setCommand(5, TEXT("Edit Settings"), openSettings, NULL, false);
     setCommand(6, TEXT("---"), NULL, NULL, false);
     setCommand(7, TEXT("GitHub Repository"), openGitHubRepo, NULL, false);
-    setCommand(8, TEXT("About"), showAbout, NULL, false);
+    setCommand(8, TEXT("About TC Syslog Finder"), showAbout, NULL, false);
 }
 
 //
