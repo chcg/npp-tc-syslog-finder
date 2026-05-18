@@ -36,13 +36,15 @@ ShortcutKey syslogShortcut = { false, true, true, 'L' };
 ShortcutKey folderShortcut = { false, true, true, 'F' };
 ShortcutKey cleanShortcut = { false, true, true, 'C' };
 
+TCHAR szIniFilePath[MAX_PATH] = {0};
 TCHAR szSyslogPath[MAX_PATH] = {0};
 TCHAR szSearchPattern[MAX_PATH] = {0};
-TCHAR szIniFilePath[MAX_PATH] = {0};
+TCHAR szThreshold[MAX_PATH] = {0};
 
 TCHAR szIniSection[] = TEXT("Settings");
 TCHAR szKeyPath[] = TEXT("SyslogPath");
 TCHAR szKeyPattern[] = TEXT("SearchPattern");
+TCHAR szKeyThreshold[] = TEXT("CleanupThreshold");
 
 void loadConfig() 
 {
@@ -54,10 +56,12 @@ void loadConfig()
     
     GetPrivateProfileString(szIniSection, szKeyPath, TEXT(""), szSyslogPath, MAX_PATH, szIniFilePath);
     GetPrivateProfileString(szIniSection, szKeyPattern, TEXT("tcserver*.syslog"), szSearchPattern, MAX_PATH, szIniFilePath);
-    
+    GetPrivateProfileString(szIniSection, szKeyThreshold, TEXT("7"), szThreshold, MAX_PATH, szIniFilePath);
+
     if (GetFileAttributes(szIniFilePath) == INVALID_FILE_ATTRIBUTES) {
         saveConfigValue(szKeyPath, szSyslogPath);
         saveConfigValue(szKeyPattern, szSearchPattern);
+        saveConfigValue(szKeyThreshold, szThreshold);
     }
 }
 
@@ -227,11 +231,16 @@ void cleanOldSyslogs()
     // Load the latest configuration
     loadConfig();
 
-    if (szSyslogPath[0] == 0) return;
+    if (szSyslogPath[0] == 0)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Path not set. Use 'Set TC Syslog Path'."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
+        return;
+    }
 
-    if (::MessageBox(nppData._nppHandle,
-        TEXT("Delete all syslogs older than 7 days?"),
-        TEXT("Clean Logs"), MB_YESNO | MB_ICONQUESTION) == IDYES)
+    TCHAR szMessage[MAX_PATH];
+    _stprintf_s(szMessage, MAX_PATH, TEXT("Delete all syslogs older than %s days?"), szThreshold);
+    
+    if (::MessageBox(nppData._nppHandle, szMessage, TEXT("Clean Logs"), MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
         TCHAR szSearch[MAX_PATH];
         _stprintf_s(szSearch, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, szSearchPattern);
@@ -243,7 +252,7 @@ void cleanOldSyslogs()
             FILETIME ftNow;
             GetSystemTimeAsFileTime(&ftNow);
 
-            ULONGLONG sevenDays = 7ULL * 24 * 60 * 60 * 1000 * 1000 * 10;
+            ULONGLONG thresholdDays = _ttoi(szThreshold) * 24 * 60 * 60 * 1000 * 1000 * 10;
 
             do {
                 ULARGE_INTEGER uiLastWrite;
@@ -254,7 +263,7 @@ void cleanOldSyslogs()
                 uiNow.LowPart = ftNow.dwLowDateTime;
                 uiNow.HighPart = ftNow.dwHighDateTime;
 
-                if (uiNow.QuadPart - uiLastWrite.QuadPart > sevenDays) {
+                if (uiNow.QuadPart - uiLastWrite.QuadPart > thresholdDays) {
                     TCHAR szFileToDelete[MAX_PATH];
                     _stprintf_s(szFileToDelete, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, fd.cFileName);
                     DeleteFile(szFileToDelete);
