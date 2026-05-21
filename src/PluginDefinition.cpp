@@ -237,8 +237,14 @@ void cleanOldSyslogs()
         return;
     }
 
+    int iThreshold = _ttoi(szThreshold);
+    if (iThreshold <= 0 && _tcscmp(szThreshold, TEXT("0")) != 0)
+    {
+        iThreshold = 7;
+    }
+
     TCHAR szMessage[MAX_PATH];
-    _stprintf_s(szMessage, MAX_PATH, TEXT("Delete all syslogs older than %s days?"), szThreshold);
+    _stprintf_s(szMessage, MAX_PATH, TEXT("Delete all syslogs older than %d days?"), iThreshold);
     
     if (::MessageBox(nppData._nppHandle, szMessage, TEXT("Clean Logs"), MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
@@ -252,7 +258,7 @@ void cleanOldSyslogs()
             FILETIME ftNow;
             GetSystemTimeAsFileTime(&ftNow);
 
-            ULONGLONG thresholdDays = _ttoi(szThreshold) * 24 * 60 * 60 * 1000 * 1000 * 10;
+            ULONGLONG thresholdDays = (ULONGLONG)iThreshold * 24ULL * 60ULL * 60ULL * 1000ULL * 1000ULL * 10ULL;
 
             do {
                 ULARGE_INTEGER uiLastWrite;
