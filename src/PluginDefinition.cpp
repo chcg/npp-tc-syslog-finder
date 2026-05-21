@@ -186,7 +186,8 @@ void openLatestSyslog()
     WIN32_FIND_DATA fd;
     HANDLE hFind = FindFirstFile(szSearch, &fd);
     
-    if (hFind == INVALID_HANDLE_VALUE) {
+    if (hFind == INVALID_HANDLE_VALUE) 
+    {
         MessageBox(nppData._nppHandle, TEXT("No syslog files found."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
         return;
     }
@@ -195,8 +196,10 @@ void openLatestSyslog()
     TCHAR szLatestFile[MAX_PATH];
     _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, fd.cFileName);
 
-    while (FindNextFile(hFind, &fd)) {
-        if (CompareFileTime(&fd.ftLastWriteTime, &ftLatest) > 0) {
+    while (FindNextFile(hFind, &fd)) 
+    {
+        if (CompareFileTime(&fd.ftLastWriteTime, &ftLatest) > 0) 
+        {
             ftLatest = fd.ftLastWriteTime;
             _stprintf_s(szLatestFile, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, fd.cFileName);
         }
@@ -254,13 +257,15 @@ void cleanOldSyslogs()
         WIN32_FIND_DATA fd;
         HANDLE hFind = FindFirstFile(szSearch, &fd);
 
-        if (hFind != INVALID_HANDLE_VALUE) {
+        if (hFind != INVALID_HANDLE_VALUE) 
+        {
             FILETIME ftNow;
             GetSystemTimeAsFileTime(&ftNow);
 
             ULONGLONG thresholdDays = (ULONGLONG)iThreshold * 24ULL * 60ULL * 60ULL * 1000ULL * 1000ULL * 10ULL;
 
-            do {
+            do 
+            {
                 ULARGE_INTEGER uiLastWrite;
                 uiLastWrite.LowPart = fd.ftLastWriteTime.dwLowDateTime;
                 uiLastWrite.HighPart = fd.ftLastWriteTime.dwHighDateTime;
@@ -269,12 +274,14 @@ void cleanOldSyslogs()
                 uiNow.LowPart = ftNow.dwLowDateTime;
                 uiNow.HighPart = ftNow.dwHighDateTime;
 
-                if (uiNow.QuadPart - uiLastWrite.QuadPart > thresholdDays) {
+                if (uiNow.QuadPart - uiLastWrite.QuadPart > thresholdDays) 
+                {
                     TCHAR szFileToDelete[MAX_PATH];
                     _stprintf_s(szFileToDelete, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, fd.cFileName);
                     DeleteFile(szFileToDelete);
                 }
-            } while (FindNextFile(hFind, &fd));
+            } 
+            while (FindNextFile(hFind, &fd));
             FindClose(hFind);
 
             MessageBox(nppData._nppHandle, TEXT("Old logs cleaned."), TEXT("Success"), MB_OK);
