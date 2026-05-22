@@ -38,12 +38,14 @@ ShortcutKey cleanShortcut = { false, true, true, 'C' };
 
 TCHAR szIniFilePath[MAX_PATH] = {0};
 TCHAR szSyslogPath[MAX_PATH] = {0};
-TCHAR szSearchPattern[MAX_PATH] = {0};
+TCHAR szSyslogFilePattern[MAX_PATH] = {0};
+TCHAR szCleanupFilePattern[MAX_PATH] = {0};
 TCHAR szThreshold[MAX_PATH] = {0};
 
 TCHAR szIniSection[] = TEXT("Settings");
 TCHAR szKeyPath[] = TEXT("SyslogPath");
-TCHAR szKeyPattern[] = TEXT("SearchPattern");
+TCHAR szKeySyslogFilePattern[] = TEXT("SyslogFilePattern");
+TCHAR szKeyCleanupFilePattern[] = TEXT("CleanupFilePattern");
 TCHAR szKeyThreshold[] = TEXT("CleanupThreshold");
 
 void loadConfig() 
@@ -55,12 +57,14 @@ void loadConfig()
     }
     
     GetPrivateProfileString(szIniSection, szKeyPath, TEXT(""), szSyslogPath, MAX_PATH, szIniFilePath);
-    GetPrivateProfileString(szIniSection, szKeyPattern, TEXT("tcserver*.syslog"), szSearchPattern, MAX_PATH, szIniFilePath);
+    GetPrivateProfileString(szIniSection, szKeySyslogFilePattern, TEXT("tcserver*.syslog"), szSyslogFilePattern, MAX_PATH, szIniFilePath);
+    GetPrivateProfileString(szIniSection, szKeyCleanupFilePattern, TEXT("tcserver*.syslog"), szCleanupFilePattern, MAX_PATH, szIniFilePath);
     GetPrivateProfileString(szIniSection, szKeyThreshold, TEXT("7"), szThreshold, MAX_PATH, szIniFilePath);
 
     if (GetFileAttributes(szIniFilePath) == INVALID_FILE_ATTRIBUTES) {
         saveConfigValue(szKeyPath, szSyslogPath);
-        saveConfigValue(szKeyPattern, szSearchPattern);
+        saveConfigValue(szKeySyslogFilePattern, szSyslogFilePattern);
+        saveConfigValue(szKeyCleanupFilePattern, szCleanupFilePattern);
         saveConfigValue(szKeyThreshold, szThreshold);
     }
 }
@@ -181,7 +185,7 @@ void openLatestSyslog()
 
     // Search for the latest syslog file in TC Syslog Path
     TCHAR szSearch[MAX_PATH];
-    _stprintf_s(szSearch, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, szSearchPattern);
+    _stprintf_s(szSearch, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, szSyslogFilePattern);
     
     WIN32_FIND_DATA fd;
     HANDLE hFind = FindFirstFile(szSearch, &fd);
@@ -252,7 +256,7 @@ void cleanOldSyslogs()
     if (::MessageBox(nppData._nppHandle, szMessage, TEXT("Clean Logs"), MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
         TCHAR szSearch[MAX_PATH];
-        _stprintf_s(szSearch, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, szSearchPattern);
+        _stprintf_s(szSearch, MAX_PATH, TEXT("%s\\%s"), szSyslogPath, szCleanupFilePattern);
 
         WIN32_FIND_DATA fd;
         HANDLE hFind = FindFirstFile(szSearch, &fd);
