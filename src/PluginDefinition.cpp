@@ -57,6 +57,10 @@ void loadConfig()
     }
     
     GetPrivateProfileString(szIniSection, szKeyPath, TEXT(""), szSyslogPath, MAX_PATH, szIniFilePath);
+    if (szSyslogPath[0] == 0)
+    {
+        GetEnvironmentVariable(TEXT("SIEMENS_LOGGING_ROOT"), szSyslogPath, MAX_PATH);
+    }
     GetPrivateProfileString(szIniSection, szKeySyslogFilePattern, TEXT("tcserver*.syslog"), szSyslogFilePattern, MAX_PATH, szIniFilePath);
     GetPrivateProfileString(szIniSection, szKeyCleanupFilePattern, TEXT("tcserver*.syslog"), szCleanupFilePattern, MAX_PATH, szIniFilePath);
     GetPrivateProfileString(szIniSection, szKeyThreshold, TEXT("7"), szThreshold, MAX_PATH, szIniFilePath);
