@@ -6,14 +6,13 @@
 A Notepad++ plugin to open the latest Teamcenter syslog instantly. 
 
 ### Why?
-Every time you start a new Teamcenter session —which happens a lot during debugging— you need to find and open a different syslog file. Whether you check it in Teamcenter's *Help > About > Log File* or keep the syslog folder open, it feels like a tedious waste of time. I wanted to make my daily work more efficient.
-
-This plugin replaces that whole process with a single shortcut.
+Every time you start a new Teamcenter session —which happens a lot during debugging— you need to find and open a different syslog file. Whether you check it in Teamcenter's *Help > About > Log File* or keep the syslog folder open, it feels like a tedious waste of time. I wanted to make my daily work more efficient. This plugin replaces that whole process with a single shortcut.
 
 ### Shortcuts
 * `Alt + Shift + L`: Open the latest syslog at the end of the file, with monitoring mode activated.
-* `Alt + Shift + F`: Open the logs folder in Windows Explorer.
-* `Alt + Shift + C`: Delete syslogs older than 7 days.
+* `Alt + Shift + R`: Open the Teamcenter logs root folder in Windows Explorer. The path is automatically detected if `SIEMENS_LOGGING_ROOT` is defined.
+* `Alt + Shift + F`: Open the specific syslogs folder in Windows Explorer.
+* `Alt + Shift + C`: Clean old logs (older than 7 days by default). The threshold is configurable in settings.
 
 ### Installation
 
@@ -30,7 +29,7 @@ TC Syslog Finder is an official Notepad++ plugin since `v8.9.5`. You can install
 3. Drop the DLL inside and restart Notepad++.
 
 ### Configuration
-Go to **Plugins > TC Syslog Finder > Set TC Syslog Path** and select your logs directory once. Use **Edit Settings** to change the search pattern if needed (default is `tcserver*.syslog`).
+Go to **Plugins > TC Syslog Finder > Set TC Syslog Path** and select your logs directory once. Use **Edit Settings** to fine-tune the search patterns, paths or the cleanup threshold.
 
 ---
 License: GPL-2.0
