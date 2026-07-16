@@ -34,6 +34,7 @@ NppData nppData;
 
 ShortcutKey syslogShortcut = { false, true, true, 'L' };
 ShortcutKey folderShortcut = { false, true, true, 'F' };
+ShortcutKey rootShortcut = { false, true, true, 'R' };
 ShortcutKey cleanShortcut = { false, true, true, 'C' };
 
 TCHAR szIniFilePath[MAX_PATH] = {0};
@@ -150,14 +151,16 @@ void commandMenuInit()
     //            bool check0nInit                // optional. Make this menu item be checked visually
     //            );
     setCommand(0, TEXT("Open Latest TC Syslog"), openLatestSyslog, &syslogShortcut, false);
-    setCommand(1, TEXT("Open Syslog Folder"), openSyslogFolder, &folderShortcut, false);
-    setCommand(2, TEXT("Clean Old Syslogs"), cleanOldSyslogs, &cleanShortcut, false);
-    setCommand(3, TEXT("---"), NULL, NULL, false);
-    setCommand(4, TEXT("Set TC Syslog Path"), setSyslogPath, NULL, false);
-    setCommand(5, TEXT("Edit Settings"), openSettings, NULL, false);
-    setCommand(6, TEXT("---"), NULL, NULL, false);
-    setCommand(7, TEXT("GitHub Repository"), openGitHubRepo, NULL, false);
-    setCommand(8, TEXT("About TC Syslog Finder"), showAbout, NULL, false);
+    setCommand(1, TEXT("---"), NULL, NULL, false);
+    setCommand(2, TEXT("Open Syslog Folder"), openSyslogFolder, &folderShortcut, false);
+    setCommand(3, TEXT("Open TC Logs Root Folder"), openRootFolder, &rootShortcut, false);
+    setCommand(4, TEXT("Clean Old Syslogs"), cleanOldSyslogs, &cleanShortcut, false);
+    setCommand(5, TEXT("---"), NULL, NULL, false);
+    setCommand(6, TEXT("Set TC Syslog Path"), setSyslogPath, NULL, false);
+    setCommand(7, TEXT("Edit Settings"), openSettings, NULL, false);
+    setCommand(8, TEXT("---"), NULL, NULL, false);
+    setCommand(9, TEXT("GitHub Repository"), openGitHubRepo, NULL, false);
+    setCommand(10, TEXT("About TC Syslog Finder"), showAbout, NULL, false);
 }
 
 //
@@ -250,6 +253,22 @@ void openSyslogFolder()
     else
     {
         ShellExecute(NULL, TEXT("explore"), szSyslogPath, NULL, NULL, SW_SHOWNORMAL);
+    }
+}
+
+void openRootFolder()
+{
+    // Load the latest configuration
+    loadConfig();
+
+    if (szRootPath[0] == 0)
+    {
+        ::MessageBox(nppData._nppHandle, TEXT("Path not set. It is usually detected automatically from SIEMENS_LOGGING_ROOT or can be set in 'Edit Settings'."), TEXT("TC Syslog Finder"), MB_OK | MB_ICONWARNING);
+        return;
+    }
+    else
+    {
+        ShellExecute(NULL, TEXT("explore"), szRootPath, NULL, NULL, SW_SHOWNORMAL);
     }
 }
 
