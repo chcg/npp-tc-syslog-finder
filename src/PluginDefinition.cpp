@@ -395,7 +395,7 @@ void showAbout()
 {
     TCHAR szAbout[1024];
     _stprintf_s(szAbout, 1024,
-        TEXT("TC Syslog Finder v1.0.0\n\n")
+        TEXT("TC Syslog Finder v1.1.0\n\n")
         TEXT("Instantly find and open the latest Teamcenter syslog in Notepad++.\n\n")
         TEXT("Author: bsagarzazu\n")
         TEXT("License: GPL-2.0")
