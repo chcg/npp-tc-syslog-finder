@@ -37,13 +37,15 @@ ShortcutKey folderShortcut = { false, true, true, 'F' };
 ShortcutKey cleanShortcut = { false, true, true, 'C' };
 
 TCHAR szIniFilePath[MAX_PATH] = {0};
+TCHAR szRootPath[MAX_PATH] = {0};
 TCHAR szSyslogPath[MAX_PATH] = {0};
 TCHAR szSyslogFilePattern[MAX_PATH] = {0};
 TCHAR szCleanupFilePattern[MAX_PATH] = {0};
 TCHAR szThreshold[MAX_PATH] = {0};
 
 TCHAR szIniSection[] = TEXT("Settings");
-TCHAR szKeyPath[] = TEXT("SyslogPath");
+TCHAR szKeyRootPath[] = TEXT("LogsRootPath");
+TCHAR szKeySyslogPath[] = TEXT("SyslogPath");
 TCHAR szKeySyslogFilePattern[] = TEXT("SyslogFilePattern");
 TCHAR szKeyCleanupFilePattern[] = TEXT("CleanupFilePattern");
 TCHAR szKeyThreshold[] = TEXT("CleanupThreshold");
@@ -56,17 +58,31 @@ void loadConfig()
         _tcscat_s(szIniFilePath, MAX_PATH, TEXT("\\TCSyslogFinder.ini"));
     }
     
-    GetPrivateProfileString(szIniSection, szKeyPath, TEXT(""), szSyslogPath, MAX_PATH, szIniFilePath);
-    if (szSyslogPath[0] == 0)
-    {
-        GetEnvironmentVariable(TEXT("SIEMENS_LOGGING_ROOT"), szSyslogPath, MAX_PATH);
-    }
+    GetPrivateProfileString(szIniSection, szKeyRootPath, TEXT(""), szRootPath, MAX_PATH, szIniFilePath);
+    GetPrivateProfileString(szIniSection, szKeySyslogPath, TEXT(""), szSyslogPath, MAX_PATH, szIniFilePath);
     GetPrivateProfileString(szIniSection, szKeySyslogFilePattern, TEXT("tcserver*.syslog"), szSyslogFilePattern, MAX_PATH, szIniFilePath);
     GetPrivateProfileString(szIniSection, szKeyCleanupFilePattern, TEXT("tcserver*.syslog"), szCleanupFilePattern, MAX_PATH, szIniFilePath);
     GetPrivateProfileString(szIniSection, szKeyThreshold, TEXT("7"), szThreshold, MAX_PATH, szIniFilePath);
 
     if (GetFileAttributes(szIniFilePath) == INVALID_FILE_ATTRIBUTES) {
-        saveConfigValue(szKeyPath, szSyslogPath);
+        TCHAR szEnvValue[MAX_PATH] = {0};
+
+        if (GetEnvironmentVariable(TEXT("SIEMENS_LOGGING_ROOT"), szEnvValue, MAX_PATH) > 0)
+        {
+            _tcscpy_s(szRootPath, MAX_PATH, szEnvValue);
+
+            TCHAR szGuessed[MAX_PATH];
+            _stprintf_s(szGuessed, MAX_PATH, TEXT("%s\\Teamcenter\\ServerManagers\\TcCluster\\PoolA\\TcServer"), szRootPath);
+
+            DWORD dwAttributes = GetFileAttributes(szGuessed);
+            if (dwAttributes != INVALID_FILE_ATTRIBUTES && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            {
+                _tcscpy_s(szSyslogPath, MAX_PATH, szGuessed);
+            }
+        }
+
+        saveConfigValue(szKeyRootPath, szRootPath);
+        saveConfigValue(szKeySyslogPath, szSyslogPath);
         saveConfigValue(szKeySyslogFilePattern, szSyslogFilePattern);
         saveConfigValue(szKeyCleanupFilePattern, szCleanupFilePattern);
         saveConfigValue(szKeyThreshold, szThreshold);
